@@ -51,7 +51,7 @@ public class H264Packet extends BasePacket {
       // Small NAL unit => Single NAL unit
       if (naluLength <= maxPacketSize - RtpConstants.RTP_HEADER_LENGTH - 2) {
         int cont = naluLength - 1;
-        int length = cont < bufferInfo.size - byteBuffer.position() ? cont : bufferInfo.size - byteBuffer.position();
+        int length = Math.min(cont, bufferInfo.size - byteBuffer.position());
         byte[] buffer = getBuffer(length + RtpConstants.RTP_HEADER_LENGTH + 1);
 
         buffer[RtpConstants.RTP_HEADER_LENGTH] = header[4];
@@ -77,11 +77,8 @@ public class H264Packet extends BasePacket {
 
         int sum = 1;
         while (sum < naluLength) {
-          int cont = naluLength - sum > maxPacketSize - RtpConstants.RTP_HEADER_LENGTH - 2 ?
-              maxPacketSize
-                  - RtpConstants.RTP_HEADER_LENGTH
-                  - 2 : naluLength - sum;
-          int length = cont < bufferInfo.size - byteBuffer.position() ? cont : bufferInfo.size - byteBuffer.position();
+          int cont = Math.min(naluLength - sum, maxPacketSize - RtpConstants.RTP_HEADER_LENGTH - 2);
+          int length = Math.min(cont, bufferInfo.size - byteBuffer.position());
           byte[] buffer = getBuffer(length + RtpConstants.RTP_HEADER_LENGTH + 2);
 
           buffer[RtpConstants.RTP_HEADER_LENGTH] = header[0];

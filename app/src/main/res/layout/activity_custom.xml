@@ -20,6 +20,7 @@
         />
 
     <EditText
+        android:text="rtsp://192.168.8:1935/test/1"
         android:textColor="@color/appColor"
         android:textColorHint="@color/appColor"
         android:inputType="textUri"

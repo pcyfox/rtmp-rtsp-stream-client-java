@@ -50,7 +50,7 @@ public abstract class BaseEncoder implements EncoderCallback {
         inputAvailable(codec, inBufferIndex, frame);
       }
     }
-    for (; running; ) {
+    while (running) {
       int outBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 0);
       if (outBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
         MediaFormat mediaFormat = codec.getOutputFormat();

@@ -383,7 +383,7 @@ public class CommandsManager {
   public String getResponse(BufferedReader reader, ConnectCheckerRtsp connectCheckerRtsp,
       boolean isAudio, boolean checkStatus) {
     try {
-      String response = "";
+      StringBuilder response = new StringBuilder();
       String line;
 
       while ((line = reader.readLine()) != null) {
@@ -408,15 +408,15 @@ public class CommandsManager {
             }
           }
         }
-        response += line + "\n";
+        response.append(line).append("\n");
         //end of response
         if (line.length() < 3) break;
       }
-      if (checkStatus && getResponseStatus(response) != 200) {
+      if (checkStatus && getResponseStatus(response.toString()) != 200) {
         connectCheckerRtsp.onConnectionFailedRtsp("Error configure stream, " + response);
       }
-      Log.i(TAG, response);
-      return response;
+      Log.i(TAG, response.toString());
+      return response.toString();
     } catch (IOException e) {
       Log.e(TAG, "read error", e);
       return null;

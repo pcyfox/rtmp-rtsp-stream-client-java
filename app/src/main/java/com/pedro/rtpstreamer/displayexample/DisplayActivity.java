@@ -137,8 +137,9 @@ public class DisplayActivity extends AppCompatActivity
 
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
     if (requestCode == REQUEST_CODE_STREAM
-        || requestCode == REQUEST_CODE_RECORD && resultCode == Activity.RESULT_OK) {
+            || requestCode == REQUEST_CODE_RECORD && resultCode == Activity.RESULT_OK) {
       initNotification();
       DisplayService.Companion.setData(resultCode, data);
       Intent intent = new Intent(this, DisplayService.class);
