@@ -110,17 +110,15 @@ class ScreenRecordDemoActivity : AppCompatActivity(), ConnectCheckerRtsp, View.O
         val r = w * h * 0.5
         if (!serverDisplay!!.isStreaming) {
             var prepareAudio = false
-            if (!isDisableAudio) {
-                prepareAudio = serverDisplay!!.prepareAudio(32 * 1024, 16000, true, false, false);
-            }
+            prepareAudio = serverDisplay!!.prepareAudio(16 * 1024, 8000, true, false, false);
             val prepareVideo = serverDisplay!!.prepareVideo(w, h, 25, r.toInt(), 0, 160)
-            if (isDisableAudio) {
-                serverDisplay?.disableAudio()
-            }
             if (isDisableAudio && prepareVideo || (!isDisableAudio && prepareAudio && prepareVideo)) {
                 tv_url.setText("stop")
                 serverDisplay!!.startStream()
                 tv_url?.setText(serverDisplay?.getEndPointConnection())
+                if (isDisableAudio) {
+                    serverDisplay?.disableAudio()
+                }
             } else {
                 Toast.makeText(this, "Error preparing stream, This device cant do it", Toast.LENGTH_SHORT)
                         .show()

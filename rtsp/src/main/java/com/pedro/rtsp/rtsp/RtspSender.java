@@ -34,12 +34,12 @@ public class RtspSender implements VideoPacketCallback, AudioPacketCallback {
   private volatile BlockingQueue<RtpFrame> rtpFrameBlockingQueue =
       new LinkedBlockingQueue<>(getDefaultCacheSize());
   private Thread thread;
-  private ConnectCheckerRtsp connectCheckerRtsp;
+  private final ConnectCheckerRtsp connectCheckerRtsp;
   private long audioFramesSent = 0;
   private long videoFramesSent = 0;
   private long droppedAudioFrames = 0;
   private long droppedVideoFrames = 0;
-  private BitrateManager bitrateManager;
+  private final BitrateManager bitrateManager;
 
   public RtspSender(ConnectCheckerRtsp connectCheckerRtsp) {
     this.connectCheckerRtsp = connectCheckerRtsp;

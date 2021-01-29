@@ -37,7 +37,7 @@ import java.util.concurrent.BlockingQueue;
 public class VideoEncoder extends BaseEncoder implements GetCameraData {
 
     private static final String TAG = "VideoEncoder";
-    private GetVideoData getVideoData;
+    private final GetVideoData getVideoData;
     private boolean spsPpsSetted = false;
     private boolean hardwareRotation = false;
 
@@ -49,15 +49,16 @@ public class VideoEncoder extends BaseEncoder implements GetCameraData {
     private int fps = 30;
     private int bitRate = 1200 * 1024; //in kbps
     private int rotation = 90;
-    private int iFrameInterval = 2;
+
+    private final int iFrameInterval = 2;
     //for disable video
-    private FpsLimiter fpsLimiter = new FpsLimiter();
+    private final FpsLimiter fpsLimiter = new FpsLimiter();
     private String type = CodecUtil.H264_MIME;
     private FormatVideoEncoder formatVideoEncoder = FormatVideoEncoder.YUV420Dynamical;
     private int avcProfile = -1;
     private int avcProfileLevel = -1;
     private HandlerThread handlerThread;
-    private BlockingQueue<Frame> queue = new ArrayBlockingQueue<>(80);
+    private final BlockingQueue<Frame> queue = new ArrayBlockingQueue<>(80);
 
     public VideoEncoder(GetVideoData getVideoData) {
         this.getVideoData = getVideoData;
@@ -111,6 +112,7 @@ public class VideoEncoder extends BaseEncoder implements GetCameraData {
                 resolution = width + "x" + height;
                 videoFormat = MediaFormat.createVideoFormat(type, width, height);
             }
+
             Log.i(TAG, "Prepare video info: " + this.formatVideoEncoder.name() + ", " + resolution);
             videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT,
                     this.formatVideoEncoder.getFormatCodec());
@@ -122,7 +124,7 @@ public class VideoEncoder extends BaseEncoder implements GetCameraData {
                 videoFormat.setInteger("rotation-degrees", rotation);
             }
 
-            if (this.avcProfile > 0 && this.avcProfileLevel > 0) {
+            if (avcProfile > 0 && avcProfileLevel > 0) {
                 // MediaFormat.KEY_PROFILE, API > 21
                 // H264规定了三种主要档次，每个档次支持一组特定的编码功能，并支持一类特定的应用。该参数确定了编码能力
                 //1、基本档次（Baseline Profile）：利用I片和P片支持帧内和帧间编码，支持利用基于上下文的自适应的变长编码进行的熵编码（CAVLC）。主要用于可视电话、会议电视、无线通信等实时视频通信。
@@ -130,10 +132,10 @@ public class VideoEncoder extends BaseEncoder implements GetCameraData {
                 //2、主要档次（Main Profile）：支持隔行视频，采用B片的帧间编码和采用加权预测的帧间编码；支持利用基于上下文的自适应的算术编码（CABAC）。主要用于数字广播电视与数字视频存储。
                 //
                 //3、扩展档次（Extended Profile）：支持码流之间有效的切换（SP和SI片）、改进误码性能，但不支持隔行视频和CABAC。
-                videoFormat.setInteger("profile", this.avcProfile);
+                videoFormat.setInteger("profile", avcProfile);
                 // MediaFormat.KEY_LEVEL, API > 23
                 //level指示编码的分辨率、比特率、宏块数和帧率等
-                videoFormat.setInteger("level", this.avcProfileLevel);
+                videoFormat.setInteger("level", avcProfileLevel);
             }
             codec.configure(videoFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
             running = false;
@@ -142,7 +144,7 @@ public class VideoEncoder extends BaseEncoder implements GetCameraData {
                 isBufferMode = false;
                 inputSurface = codec.createInputSurface();
             }
-            Log.i(TAG, "prepared");
+            Log.i(TAG, "video prepared");
             return true;
         } catch (IOException | IllegalStateException e) {
             Log.e(TAG, "Create VideoEncoder failed.", e);
@@ -155,7 +157,7 @@ public class VideoEncoder extends BaseEncoder implements GetCameraData {
     public void start(boolean resetTs) {
         spsPpsSetted = false;
         if (resetTs) {
-            presentTimeUs = System.nanoTime() / 1000;
+            presentTimeUs = System.nanoTime() / 1000;//PTS
             fpsLimiter.setFPS(fps);
         }
         if (formatVideoEncoder != FormatVideoEncoder.SURFACE) {
@@ -165,6 +167,7 @@ public class VideoEncoder extends BaseEncoder implements GetCameraData {
         handlerThread = new HandlerThread(TAG);
         handlerThread.start();
         Handler handler = new Handler(handlerThread.getLooper());
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             createAsyncCallback();
             codec.setCallback(callback, handler);
@@ -210,6 +213,12 @@ public class VideoEncoder extends BaseEncoder implements GetCameraData {
         start(false);
     }
 
+    /**
+     * 获取YUV格式
+     *
+     * @param mediaCodecInfo
+     * @return
+     */
     private FormatVideoEncoder chooseColorDynamically(MediaCodecInfo mediaCodecInfo) {
         for (int color : mediaCodecInfo.getCapabilitiesForType(type).colorFormats) {
             if (color == FormatVideoEncoder.YUV420PLANAR.getFormatCodec()) {
@@ -361,10 +370,12 @@ public class VideoEncoder extends BaseEncoder implements GetCameraData {
         int i = 0;
         int spsIndex = -1;
         int ppsIndex = -1;
+        //找到SPS\PPS的起始位置
         while (i < length - 4) {
+            //0001:起始码
             if (csd[i] == 0 && csd[i + 1] == 0 && csd[i + 2] == 0 && csd[i + 3] == 1) {
                 if (spsIndex == -1) {
-                    spsIndex = i;
+                    spsIndex = i;//确定sps位置
                 } else {
                     ppsIndex = i;
                     break;
@@ -462,8 +473,7 @@ public class VideoEncoder extends BaseEncoder implements GetCameraData {
                                @NonNull MediaCodec.BufferInfo bufferInfo) {
         if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
             if (!spsPpsSetted) {
-                Pair<ByteBuffer, ByteBuffer> buffers =
-                        decodeSpsPpsFromBuffer(byteBuffer.duplicate(), bufferInfo.size);
+                Pair<ByteBuffer, ByteBuffer> buffers = decodeSpsPpsFromBuffer(byteBuffer.duplicate(), bufferInfo.size);
                 if (buffers != null) {
                     getVideoData.onSpsPps(buffers.first, buffers.second);
                     spsPpsSetted = true;

@@ -46,23 +46,21 @@ import static android.content.Context.MEDIA_PROJECTION_SERVICE;
  */
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public abstract class DisplayBase implements GetAacData, GetVideoData, GetMicrophoneData {
-    private boolean disableAudio;
     private OffScreenGlThread glInterface;
     protected Context context;
     private MediaProjection mediaProjection;
-    private MediaProjectionManager mediaProjectionManager;
+    private final MediaProjectionManager mediaProjectionManager;
     protected VideoEncoder videoEncoder;
-    private MicrophoneManager microphoneManager;
-    private AudioEncoder audioEncoder;
+    private final MicrophoneManager microphoneManager;
+    private final AudioEncoder audioEncoder;
     private boolean streaming = false;
     protected SurfaceView surfaceView;
-    private boolean videoEnabled = true;
     private int dpi = 320;
     private VirtualDisplay virtualDisplay;
     private int resultCode = -1;
     private Intent data;
-    private RecordController recordController;
-    private FpsListener fpsListener = new FpsListener();
+    private final RecordController recordController;
+    private final FpsListener fpsListener = new FpsListener();
 
     public DisplayBase(Context context, boolean useOpengl) {
         this.context = context;
@@ -70,8 +68,7 @@ public abstract class DisplayBase implements GetAacData, GetVideoData, GetMicrop
             glInterface = new OffScreenGlThread(context);
             glInterface.init();
         }
-        mediaProjectionManager =
-                ((MediaProjectionManager) context.getSystemService(MEDIA_PROJECTION_SERVICE));
+        mediaProjectionManager = ((MediaProjectionManager) context.getSystemService(MEDIA_PROJECTION_SERVICE));
         this.surfaceView = null;
         videoEncoder = new VideoEncoder(this);
         microphoneManager = new MicrophoneManager(this);
@@ -177,6 +174,7 @@ public abstract class DisplayBase implements GetAacData, GetVideoData, GetMicrop
                 .addMatchingUsage(AudioAttributes.USAGE_GAME)
                 .addMatchingUsage(AudioAttributes.USAGE_UNKNOWN)
                 .build();
+
         microphoneManager.createInternalMicrophone(config, sampleRate, isStereo);
         prepareAudioRtp(isStereo, sampleRate);
         return audioEncoder.prepareAudioEncoder(bitrate, sampleRate, isStereo,
@@ -284,21 +282,21 @@ public abstract class DisplayBase implements GetAacData, GetVideoData, GetMicrop
         if (data == null) {
             throw new RuntimeException("You need send intent data before startRecord or startStream");
         }
+
         videoEncoder.start();
-        if (!disableAudio) {
-            audioEncoder.start();
-        }
+        audioEncoder.start();
+
         if (glInterface != null) {
             glInterface.setFps(videoEncoder.getFps());
             glInterface.start();
             glInterface.addMediaCodecSurface(videoEncoder.getInputSurface());
         }
+
         Surface surface = (glInterface != null) ? glInterface.getSurface() : videoEncoder.getInputSurface();
         if (mediaProjection == null) {
             mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data);
         }
-        virtualDisplay = mediaProjection.createVirtualDisplay("Stream Display", videoEncoder.getWidth(),
-                videoEncoder.getHeight(), dpi, 0, surface, null, null);
+        virtualDisplay = mediaProjection.createVirtualDisplay("Stream Display", videoEncoder.getWidth(), videoEncoder.getHeight(), dpi, 0, surface, null, null);
         microphoneManager.start();
     }
 
@@ -403,7 +401,6 @@ public abstract class DisplayBase implements GetAacData, GetVideoData, GetMicrop
      * Mute microphone, can be called before, while and after stream.
      */
     public void disableAudio() {
-        disableAudio = true;
         microphoneManager.mute();
     }
 
@@ -429,6 +426,7 @@ public abstract class DisplayBase implements GetAacData, GetVideoData, GetMicrop
      * @return true if disabled, false if enabled
      */
     public boolean isVideoEnabled() {
+        boolean videoEnabled = true;
         return videoEnabled;
     }
 
