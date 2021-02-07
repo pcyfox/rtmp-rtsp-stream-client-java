@@ -38,6 +38,7 @@ class RtspServer(
     var isStereo = true
     private val clients = mutableListOf<Client>()
     private var thread: Thread? = null
+    private var isBroadcast = true
 
     var isStarted = false
         private set
@@ -159,12 +160,16 @@ class RtspServer(
                     }
                     val action = request.split("\n")[0]
                     Log.i(TAG, request)
+                    //TODO 如果已经连接的，OPTIONS就不再回复
+
                     val response = commandsManager.createResponse(action, request, cSeq)
                     Log.i(TAG, response)
                     output.write(response)
                     output.flush()
+
                     Log.d(TAG, "--------action:$action")
                     Log.d(TAG, "--------protocol:${commandsManager.protocol}")
+
                     if (action.contains("play", true)) {
                         Log.i(TAG, "Protocol ${commandsManager.protocol}")
                         rtspSender.setSocketsInfo(
@@ -178,6 +183,8 @@ class RtspServer(
                                     commandsManager.pps,
                                     commandsManager.vps
                             )
+                        } else {
+                            Log.e(TAG, "play with not sps,pps!")
                         }
                         rtspSender.setAudioInfo(sampleRate)
                         rtspSender.setDataStream(socket.getOutputStream(), commandsManager.clientIp)
@@ -214,6 +221,28 @@ class RtspServer(
             } finally {
                 socket.close()
             }
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (other == null) {
+                return false
+            }
+            if (other === this) {
+                return true
+            }
+            if (other is Client) {
+                return other.commandsManager.clientIp == this.commandsManager.clientIp
+            }
+            return false
+        }
+
+        override fun hashCode(): Int {
+            var result = socket.hashCode()
+            result = 31 * result + sampleRate
+            result = 31 * result + cSeq
+            result = 31 * result + commandsManager.hashCode()
+            result = 31 * result + canSend.hashCode()
+            return result
         }
     }
 }

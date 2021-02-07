@@ -93,13 +93,23 @@
         <activity
             android:name=".backgroundexample.BackgroundActivity"
             android:label="@string/service_rtp" />
-        <activity android:name=".displayexample.ScreenRecordDemoActivity" />
+        <activity
+            android:name=".screenstreamexample.ScreenRecordDemoActivity"
+            android:screenOrientation="landscape" />
 
         <service android:name=".backgroundexample.RtpService" />
 
         <service
             android:name=".displayexample.DisplayService"
+            android:enabled="true"
             android:foregroundServiceType="mediaProjection" />
+
+        <service
+            android:name=".screenstreamexample.ScreenRecorderService"
+            android:enabled="true"
+            android:foregroundServiceType="mediaProjection" />
+
+
     </application>
 
 </manifest>

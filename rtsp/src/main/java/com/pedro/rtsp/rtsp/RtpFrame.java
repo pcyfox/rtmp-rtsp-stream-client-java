@@ -5,73 +5,99 @@ package com.pedro.rtsp.rtsp;
  */
 
 public class RtpFrame {
+    private boolean isKeyFrame;
+    private byte[] buffer;
+    private long timeStamp;
+    private int length;
+    private int rtpPort; //rtp udp
+    private int rtcpPort; //rtcp udp
+    private byte channelIdentifier; //rtcp tcp
+    private long sequence;
 
-  private byte[] buffer;
-  private long timeStamp;
-  private int length;
-  private int rtpPort; //rtp udp
-  private int rtcpPort; //rtcp udp
-  private byte channelIdentifier; //rtcp tcp
+    public RtpFrame(byte[] buffer, long timeStamp, int length, int rtpPort, int rtcpPort,
+                    byte channelIdentifier) {
+        this.buffer = buffer;
+        this.timeStamp = timeStamp;
+        this.length = length;
+        this.rtpPort = rtpPort;
+        this.rtcpPort = rtcpPort;
+        this.channelIdentifier = channelIdentifier;
+    }
 
-  public RtpFrame(byte[] buffer, long timeStamp, int length, int rtpPort, int rtcpPort,
-      byte channelIdentifier) {
-    this.buffer = buffer;
-    this.timeStamp = timeStamp;
-    this.length = length;
-    this.rtpPort = rtpPort;
-    this.rtcpPort = rtcpPort;
-    this.channelIdentifier = channelIdentifier;
-  }
+    public long getSequence() {
+        return sequence;
+    }
 
-  public byte[] getBuffer() {
-    return buffer;
-  }
+    public void setSequence(long sequence) {
+        this.sequence = sequence;
+    }
 
-  public void setBuffer(byte[] buffer) {
-    this.buffer = buffer;
-  }
+    public boolean isKeyFrame() {
+        return isKeyFrame;
+    }
 
-  public long getTimeStamp() {
-    return timeStamp;
-  }
+    public void setKeyFrame(boolean keyFrame) {
+        isKeyFrame = keyFrame;
+    }
 
-  public void setTimeStamp(long timeStamp) {
-    this.timeStamp = timeStamp;
-  }
+    public byte[] getBuffer() {
+        return buffer;
+    }
 
-  public int getLength() {
-    return length;
-  }
+    public void setBuffer(byte[] buffer) {
+        this.buffer = buffer;
+    }
 
-  public void setLength(int length) {
-    this.length = length;
-  }
+    public long getTimeStamp() {
+        return timeStamp;
+    }
 
-  public int getRtpPort() {
-    return rtpPort;
-  }
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
 
-  public void setRtpPort(int rtpPort) {
-    this.rtpPort = rtpPort;
-  }
+    public int getLength() {
+        return length;
+    }
 
-  public int getRtcpPort() {
-    return rtcpPort;
-  }
+    public void setLength(int length) {
+        this.length = length;
+    }
 
-  public void setRtcpPort(int rtcpPort) {
-    this.rtcpPort = rtcpPort;
-  }
+    public int getRtpPort() {
+        return rtpPort;
+    }
 
-  public byte getChannelIdentifier() {
-    return channelIdentifier;
-  }
+    public void setRtpPort(int rtpPort) {
+        this.rtpPort = rtpPort;
+    }
 
-  public void setChannelIdentifier(byte channelIdentifier) {
-    this.channelIdentifier = channelIdentifier;
-  }
+    public int getRtcpPort() {
+        return rtcpPort;
+    }
 
-  public boolean isVideoFrame() {
-    return channelIdentifier == (byte) 2;
-  }
+    public void setRtcpPort(int rtcpPort) {
+        this.rtcpPort = rtcpPort;
+    }
+
+    public byte getChannelIdentifier() {
+        return channelIdentifier;
+    }
+
+    public void setChannelIdentifier(byte channelIdentifier) {
+        this.channelIdentifier = channelIdentifier;
+    }
+
+    public boolean isVideoFrame() {
+        return channelIdentifier == (byte) 2;
+    }
+
+    @Override
+    public String toString() {
+        return "RtpFrame{" +
+                "isKeyFrame=" + isKeyFrame +
+                ", length=" + length +
+                ", sequence=" + sequence +
+                '}';
+    }
 }

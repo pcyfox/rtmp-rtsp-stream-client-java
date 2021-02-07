@@ -1,4 +1,4 @@
-package com.pedro.rtpstreamer.displayexample
+package com.pedro.rtpstreamer.screenstreamexample
 
 import android.Manifest
 import android.content.Context
@@ -14,8 +14,6 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.blankj.utilcode.util.ScreenUtils
-import com.pedro.encoder.input.video.CameraHelper
 import com.pedro.rtpstreamer.R
 import com.pedro.rtsp.utils.ConnectCheckerRtsp
 import com.pedro.rtspserver.RtspServerDisplay
@@ -65,7 +63,8 @@ class ScreenRecordDemoActivity : AppCompatActivity(), ConnectCheckerRtsp, View.O
             )
                     .show()
             serverDisplay!!.stopStream()
-            btn_start_screen?.setText("start")
+
+            btn_start_screen?.text = "start"
         }
     }
 
@@ -79,7 +78,7 @@ class ScreenRecordDemoActivity : AppCompatActivity(), ConnectCheckerRtsp, View.O
         runOnUiThread {
             Toast.makeText(this@ScreenRecordDemoActivity, "Auth error", Toast.LENGTH_SHORT).show()
             serverDisplay?.stopStream()
-            btn_start_screen?.setText("start")
+            btn_start_screen?.text = "start"
             tv_url.setText("")
         }
     }
@@ -91,7 +90,6 @@ class ScreenRecordDemoActivity : AppCompatActivity(), ConnectCheckerRtsp, View.O
     }
 
     override fun onClick(view: View) {
-        val rotation = CameraHelper.getCameraOrientation(this)
         when (view.id) {
             R.id.btn_start_screen -> {
                 startActivityForResult((getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager).createScreenCaptureIntent(), REQUEST_CODE)
@@ -104,16 +102,24 @@ class ScreenRecordDemoActivity : AppCompatActivity(), ConnectCheckerRtsp, View.O
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+
+
+        ScreenRecorderService.start(this, resultCode, data, 1935)
+
+/*
         serverDisplay?.setIntentResult(resultCode, data)
         val w = ScreenUtils.getAppScreenWidth()
         val h = ScreenUtils.getAppScreenHeight()
-        val r = w * h * 0.5
+        val r = w * h * 0.1
         if (!serverDisplay!!.isStreaming) {
             var prepareAudio = false
             prepareAudio = serverDisplay!!.prepareAudio(16 * 1024, 8000, true, false, false);
             val prepareVideo = serverDisplay!!.prepareVideo(w, h, 25, r.toInt(), 0, 160)
             if (isDisableAudio && prepareVideo || (!isDisableAudio && prepareAudio && prepareVideo)) {
                 tv_url.setText("stop")
+                if (isDisableAudio) {
+                    serverDisplay?.disableAudio()
+                }
                 serverDisplay!!.startStream()
                 tv_url?.setText(serverDisplay?.getEndPointConnection())
                 if (isDisableAudio) {
@@ -126,10 +132,11 @@ class ScreenRecordDemoActivity : AppCompatActivity(), ConnectCheckerRtsp, View.O
 
 
         } else {
-            btn_start_screen!!.setText("stop    ")
+            btn_start_screen!!.text = "stop    "
             serverDisplay!!.stopStream()
             tv_url.setText("")
         }
+*/
     }
 
 

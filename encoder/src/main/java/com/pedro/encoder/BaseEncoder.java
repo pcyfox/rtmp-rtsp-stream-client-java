@@ -4,6 +4,7 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -138,6 +139,8 @@ public abstract class BaseEncoder implements EncoderCallback {
         } else {
             byteBuffer = mediaCodec.getOutputBuffers()[outBufferIndex];
         }
+
+//        Log.d(TAG, "outputAvailable() byteBuffer size="+bufferInfo.size);
         processOutput(byteBuffer, mediaCodec, outBufferIndex, bufferInfo);
     }
 }

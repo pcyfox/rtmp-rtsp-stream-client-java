@@ -38,15 +38,15 @@ public class CommandsManager {
   //For udp
   private final int[] audioClientPorts = new int[] { 5000, 5001 };
   private final int[] videoClientPorts = new int[] { 5002, 5003 };
-  private int[] audioServerPorts = new int[] { 5004, 5005 };
-  private int[] videoServerPorts = new int[] { 5006, 5007 };
+  private final int[] audioServerPorts = new int[] { 5004, 5005 };
+  private final int[] videoServerPorts = new int[] { 5006, 5007 };
   private byte[] vps; //For H265
   //For auth
   private String user;
   private String password;
 
   public CommandsManager() {
-    protocol = Protocol.TCP;
+    protocol = Protocol.UDP;
     long uptime = System.currentTimeMillis();
     timeStamp = (uptime / 1000) << 32 & (((uptime - ((uptime / 1000) * 1000)) >> 32)
         / 1000); // NTP timestamp

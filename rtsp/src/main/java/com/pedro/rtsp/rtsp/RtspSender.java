@@ -115,9 +115,9 @@ public class RtspSender implements VideoPacketCallback, AudioPacketCallback {
       public void run() {
         while (!Thread.interrupted()) {
           try {
-            RtpFrame rtpFrame = rtpFrameBlockingQueue.poll(1, TimeUnit.SECONDS);
+            RtpFrame rtpFrame = rtpFrameBlockingQueue.poll(500, TimeUnit.MILLISECONDS);
             if (rtpFrame == null) {
-              Log.i(TAG, "Skipping iteration, frame null");
+            //  Log.d(TAG, "Skipping iteration, frame null");
               continue;
             }
             rtpSocket.sendFrame(rtpFrame);

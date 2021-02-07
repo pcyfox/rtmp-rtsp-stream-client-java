@@ -9,7 +9,7 @@ public class BitrateManager {
 
   private long bitrate;
   private long timeStamp = System.currentTimeMillis();
-  private ConnectCheckerRtsp connectCheckerRtsp;
+  private final ConnectCheckerRtsp connectCheckerRtsp;
 
   public BitrateManager(ConnectCheckerRtsp connectCheckerRtsp) {
     this.connectCheckerRtsp = connectCheckerRtsp;

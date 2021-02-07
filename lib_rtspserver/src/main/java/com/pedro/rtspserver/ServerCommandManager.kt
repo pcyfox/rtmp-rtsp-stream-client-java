@@ -113,6 +113,7 @@ class ServerCommandManager(private val serverIp: String, private val serverPort:
   @Throws(IOException::class, IllegalStateException::class, SocketException::class)
   fun getRequest(
       input: BufferedReader): String {
+
     var request = ""
     var line: String? = input.readLine()
     while (line != null && line.length > 3) {

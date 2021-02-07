@@ -10,6 +10,7 @@ import android.media.MediaFormat;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceView;
 
@@ -46,6 +47,8 @@ import static android.content.Context.MEDIA_PROJECTION_SERVICE;
  */
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public abstract class DisplayBase implements GetAacData, GetVideoData, GetMicrophoneData {
+    private static final String TAG = "DisplayBase";
+    private boolean disableAudio = false;
     private OffScreenGlThread glInterface;
     protected Context context;
     private MediaProjection mediaProjection;
@@ -128,6 +131,7 @@ public abstract class DisplayBase implements GetAacData, GetVideoData, GetMicrop
     }
 
     public boolean prepareVideo(int width, int height, int fps, int bitrate, int rotation, int dpi) {
+        Log.d(TAG, "prepareVideo() called with: width = [" + width + "], height = [" + height + "], fps = [" + fps + "], bitrate = [" + bitrate + "], rotation = [" + rotation + "], dpi = [" + dpi + "]");
         return prepareVideo(width, height, fps, bitrate, rotation, dpi, -1, -1, 2);
     }
 
@@ -284,20 +288,25 @@ public abstract class DisplayBase implements GetAacData, GetVideoData, GetMicrop
         }
 
         videoEncoder.start();
-        audioEncoder.start();
+        if (!disableAudio) {
+            audioEncoder.start();
+        }
 
         if (glInterface != null) {
             glInterface.setFps(videoEncoder.getFps());
             glInterface.start();
             glInterface.addMediaCodecSurface(videoEncoder.getInputSurface());
         }
-
+        //录屏相关
         Surface surface = (glInterface != null) ? glInterface.getSurface() : videoEncoder.getInputSurface();
         if (mediaProjection == null) {
             mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data);
         }
         virtualDisplay = mediaProjection.createVirtualDisplay("Stream Display", videoEncoder.getWidth(), videoEncoder.getHeight(), dpi, 0, surface, null, null);
-        microphoneManager.start();
+
+        if (!disableAudio) {
+            microphoneManager.start();
+        }
     }
 
     private void resetVideoEncoder() {
@@ -401,13 +410,16 @@ public abstract class DisplayBase implements GetAacData, GetVideoData, GetMicrop
      * Mute microphone, can be called before, while and after stream.
      */
     public void disableAudio() {
+        disableAudio = true;
         microphoneManager.mute();
+        microphoneManager.stop();
     }
 
     /**
      * Enable a muted microphone, can be called before, while and after stream.
      */
     public void enableAudio() {
+        disableAudio = false;
         microphoneManager.unMute();
     }
 
@@ -426,8 +438,7 @@ public abstract class DisplayBase implements GetAacData, GetVideoData, GetMicrop
      * @return true if disabled, false if enabled
      */
     public boolean isVideoEnabled() {
-        boolean videoEnabled = true;
-        return videoEnabled;
+        return true;
     }
 
     public int getBitrate() {

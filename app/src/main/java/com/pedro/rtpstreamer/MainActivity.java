@@ -22,7 +22,7 @@ import com.pedro.rtpstreamer.customexample.RtspActivity;
 import com.pedro.rtpstreamer.defaultexample.ExampleRtmpActivity;
 import com.pedro.rtpstreamer.defaultexample.ExampleRtspActivity;
 import com.pedro.rtpstreamer.displayexample.DisplayActivity;
-import com.pedro.rtpstreamer.displayexample.ScreenRecordDemoActivity;
+import com.pedro.rtpstreamer.screenstreamexample.ScreenRecordDemoActivity;
 import com.pedro.rtpstreamer.filestreamexample.RtmpFromFileActivity;
 import com.pedro.rtpstreamer.filestreamexample.RtspFromFileActivity;
 import com.pedro.rtpstreamer.openglexample.OpenGlRtmpActivity;
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         activities.add(new ActivityLink(new Intent(this, BackgroundActivity.class),
                 getString(R.string.service_rtp), LOLLIPOP));
         activities.add(new ActivityLink(new Intent(this, ScreenRecordDemoActivity.class),
-                getString(R.string.service_rtp), LOLLIPOP));
+                getString(R.string.screen_rtp), LOLLIPOP));
     }
 
     private void setListAdapter(List<ActivityLink> activities) {
