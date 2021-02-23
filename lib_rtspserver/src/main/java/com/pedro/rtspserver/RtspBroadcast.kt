@@ -14,12 +14,14 @@ class RtspBroadcast : VideoPacketCallback {
     private val TAG = "RtspBroadcast"
     private val datagramSocket = DatagramSocket()
 
-   // private val broadcastIp = "255.255.255.255"
-    private val broadcastIp = "192.168.41.18"
-   // private val broadcastIp = "239.0.0.200"
+    // private val broadcastIp = "255.255.255.255"
+    //private val broadcastIp = "192.168.41.18"
+    private val broadcastIp = "239.0.0.200"
     private val targetPort = 2021
     private var videoPacket: H264Packet? = null
     private var lastSeq = 0L
+    private val ipGroup = arrayListOf(12, 11)
+
     override fun onVideoFrameCreated(rtpFrame: RtpFrame) {
 //        if (rtpFrame.sequence != 0L && rtpFrame.sequence - lastSeq != 1L) {
 //            Log.e(TAG, "onVideoFrameCreated() called with: lastAwq= $lastSeq  currentSeq= ${rtpFrame.sequence}")
@@ -29,7 +31,16 @@ class RtspBroadcast : VideoPacketCallback {
 //        } else {
 //            Log.d(TAG, "onVideoFrameCreated() called with: rtpFrame = $rtpFrame")
 //        }
-        lastSeq = rtpFrame.sequence
+
+
+/*
+        for (ip in ipGroup) {
+            val address = InetAddress.getByName("192.168.43.$ip")
+            val packet = DatagramPacket(rtpFrame.buffer, rtpFrame.length, address, targetPort)
+            datagramSocket.send(packet)
+        }
+*/
+
         val targetAddress = InetAddress.getByName(broadcastIp)
         val packet = DatagramPacket(rtpFrame.buffer, rtpFrame.length, targetAddress, targetPort)
         datagramSocket.send(packet)

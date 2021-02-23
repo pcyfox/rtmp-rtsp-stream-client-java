@@ -162,15 +162,14 @@ class ScreenRecorderService : Service() {
 
 
     private fun startStreamRtp(isDisableAudio: Boolean) {
-       // val w = ScreenUtils.getAppScreenWidth()
-     //   val h = ScreenUtils.getAppScreenHeight()
-
-        val w = 1920
-         val h = 1080
-        val r = w * h * 0.2
+        val w = ScreenUtils.getAppScreenWidth()
+        val h = ScreenUtils.getAppScreenHeight()
+        //val w = 1920
+        //val h = 1080
+        val r = w * h * 0.4
         if (!serverDisplay!!.isStreaming) {
             val prepareAudio = serverDisplay!!.prepareAudio(16 * 1024, 8000, true, false, false);
-            val prepareVideo = serverDisplay!!.prepareVideo(w, h, 20, r.toInt(), 0, 160)
+            val prepareVideo = serverDisplay!!.prepareVideo(w, h, 25, r.toInt(), 0, ScreenUtils.getScreenDensityDpi())
             if (isDisableAudio && prepareVideo || (!isDisableAudio && prepareAudio && prepareVideo)) {
                 if (isDisableAudio) {
                     serverDisplay?.disableAudio()

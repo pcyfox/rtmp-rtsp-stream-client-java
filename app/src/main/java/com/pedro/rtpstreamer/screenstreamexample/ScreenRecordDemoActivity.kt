@@ -39,6 +39,14 @@ class ScreenRecordDemoActivity : AppCompatActivity(), ConnectCheckerRtsp, View.O
         requestCameraPermission()
     }
 
+    private fun initTestVideo() {
+        vv_test.setVideoPath("/sdcard/test.mp4")
+        vv_test.setOnPreparedListener {
+            vv_test.start()
+            it.isLooping = true
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun initServer() {
         serverDisplay = RtspServerDisplay(this, false, this, 1935)
@@ -93,6 +101,7 @@ class ScreenRecordDemoActivity : AppCompatActivity(), ConnectCheckerRtsp, View.O
         when (view.id) {
             R.id.btn_start_screen -> {
                 startActivityForResult((getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager).createScreenCaptureIntent(), REQUEST_CODE)
+                initTestVideo()
             }
 
         }
