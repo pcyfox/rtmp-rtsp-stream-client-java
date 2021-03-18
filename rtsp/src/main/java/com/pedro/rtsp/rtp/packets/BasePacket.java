@@ -12,7 +12,7 @@ import java.util.Random;
  */
 
 public abstract class BasePacket {
-    protected final static int maxPacketSize = RtpConstants.MTU - 28;
+    protected final static int maxPacketSize = RtpConstants.MTU;
     protected byte channelIdentifier;
     protected int rtpPort;
     protected int rtcpPort;
@@ -23,6 +23,10 @@ public abstract class BasePacket {
     public BasePacket(long clock) {
         this.clock = clock;
         ssrc = new Random().nextInt();
+    }
+
+    public long getClock() {
+        return clock;
     }
 
     public abstract void createAndSendPacket(ByteBuffer byteBuffer, MediaCodec.BufferInfo bufferInfo);
@@ -41,6 +45,7 @@ public abstract class BasePacket {
         byte[] buffer = new byte[size];
         buffer[0] = (byte) Integer.parseInt("10000000", 2);
         buffer[1] = (byte) RtpConstants.payloadType;
+
         setLongSSRC(buffer, ssrc);
         requestBuffer(buffer);
         return buffer;
@@ -77,5 +82,32 @@ public abstract class BasePacket {
 
     private void requestBuffer(byte[] buffer) {
         buffer[1] &= 0x7F;
+    }
+
+
+    public static String bytesToHexString(byte[] src) {
+        StringBuilder stringBuilder = new StringBuilder("");
+        if (src == null || src.length <= 0) {
+            return null;
+        }
+        for (byte b : src) {
+            int v = b & 0xFF;
+            String hv = Integer.toHexString(v);
+            if (hv.length() < 2) {
+                stringBuilder.append(0);
+            }
+            stringBuilder.append(hv).append(" ");
+        }
+        return stringBuilder.toString();
+    }
+
+    public static String intToHex(int i) {
+        int v = i & 0xFF;
+        String hv = Integer.toHexString(v);
+        if (hv.length() < 2) {
+            return "0" + hv;
+        } else {
+            return hv;
+        }
     }
 }

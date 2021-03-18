@@ -19,4 +19,4 @@ android {
   }
 }
 
-dependencies {}
+dependencies { implementation project(path: ':lib_h264') }

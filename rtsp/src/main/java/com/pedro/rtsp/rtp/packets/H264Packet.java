@@ -3,6 +3,7 @@ package com.pedro.rtsp.rtp.packets;
 import android.media.MediaCodec;
 import android.util.Log;
 
+import com.pcyfox.h264.H264HandlerNative;
 import com.pedro.rtsp.rtsp.RtpFrame;
 import com.pedro.rtsp.utils.RtpConstants;
 
@@ -17,98 +18,50 @@ public class H264Packet extends BasePacket {
     private final byte[] header = new byte[5];
     private byte[] STAP_A;
     private final VideoPacketCallback videoPacketCallback;
-    private boolean sendKeyFrame = false;
     private static final String TAG = "H264Packet";
+    private final H264HandlerNative h264HandlerNative;
 
     public H264Packet(byte[] sps, byte[] pps, VideoPacketCallback videoPacketCallback) {
         super(RtpConstants.clockVideoFrequency);
+        h264HandlerNative = new H264HandlerNative();
         this.videoPacketCallback = videoPacketCallback;
         channelIdentifier = (byte) 2;
         setSpsPps(sps, pps);
     }
 
+    private byte[] getTestData(int len) {
+        final byte[] buf = new byte[len];
+        for (int i = 0; i < len; i++) {
+            if (i < 4) {
+                buf[i] = 0;
+                continue;
+            }
+            buf[i] = (byte) (((i - 5) % 10) + 1);
+        }
+        buf[4] = 65;
+        buf[3] = 1;
+        return buf;
+    }
+
     @Override
     public void createAndSendPacket(ByteBuffer byteBuffer, MediaCodec.BufferInfo bufferInfo) {
-        // We read a NAL units from ByteBuffer and we send them
-        // NAL units are preceded with 0x00000001
-        byteBuffer.rewind();
-        byteBuffer.get(header, 0, 5);
-        long ts = bufferInfo.presentationTimeUs * 1000L;
-        int naluLength = bufferInfo.size - byteBuffer.position() + 1;
-        int type = header[4] & 0x1F;
-        boolean isKeyFrame = false;
-        if (type == RtpConstants.IDR || bufferInfo.flags == MediaCodec.BUFFER_FLAG_KEY_FRAME) {//I 帧
-            byte[] buffer = getBuffer(STAP_A.length + RtpConstants.RTP_HEADER_LENGTH);
-            updateTimeStamp(buffer, ts);
-            markPacket(buffer); //mark end frame
-            System.arraycopy(STAP_A, 0, buffer, RtpConstants.RTP_HEADER_LENGTH, STAP_A.length);
-            updateSeq(buffer);
-            RtpFrame rtpFrame = new RtpFrame(buffer, ts, STAP_A.length + RtpConstants.RTP_HEADER_LENGTH, rtpPort, rtcpPort, channelIdentifier);
-            rtpFrame.setKeyFrame(true);
-            rtpFrame.setSequence(getSeq());
-            videoPacketCallback.onVideoFrameCreated(rtpFrame);
-            sendKeyFrame = true;
-            isKeyFrame = true;
-        }
-
-        if (sendKeyFrame) {
-            // Small NAL unit => Single NAL unit
-            if (naluLength <= maxPacketSize - RtpConstants.RTP_HEADER_LENGTH - 2) {
-                if (isKeyFrame) {
-                    Log.e(TAG, "createAndSendPacket() called with:small key frame ");
-                }
-                int cont = naluLength - 1;
-                int length = Math.min(cont, bufferInfo.size - byteBuffer.position());
-                //构建RTP Header
-                byte[] buffer = getBuffer(length + RtpConstants.RTP_HEADER_LENGTH + 1);
-                //设置NALU header
-                buffer[RtpConstants.RTP_HEADER_LENGTH] = header[4];
-                byteBuffer.get(buffer, RtpConstants.RTP_HEADER_LENGTH + 1, length);
-                updateTimeStamp(buffer, ts);
-                markPacket(buffer); //mark end frame
-                updateSeq(buffer);
-                //   String small=bytesToHexString(buffer);
-                RtpFrame rtpFrame = new RtpFrame(buffer, ts, naluLength + RtpConstants.RTP_HEADER_LENGTH, rtpPort, rtcpPort, channelIdentifier);
+        final long ts = bufferInfo.presentationTimeUs * 1000L;
+        byte[] buf = new byte[bufferInfo.size - bufferInfo.offset];
+        byteBuffer.get(buf, bufferInfo.offset, bufferInfo.size);
+        h264HandlerNative.packH264ToRTP(buf, buf.length, maxPacketSize, ts, getClock(), true, new H264HandlerNative.ResultCallback() {
+            @Override
+            public void onCallback(byte[] data) {
+                RtpFrame rtpFrame = new RtpFrame(data, ts, data.length, rtpPort, rtcpPort, channelIdentifier);
                 rtpFrame.setSequence(getSeq());
                 videoPacketCallback.onVideoFrameCreated(rtpFrame);
-            } else {
-                // Large NAL unit => Split nal unit
-                // Set FU-A header
-                header[1] = (byte) (header[4] & 0x1F);  // FU header type
-                header[1] += 0x80; // set start bit to 1
-                // Set FU-A indicator
-                header[0] = (byte) ((header[4] & 0x60) & 0xFF); // FU indicator NRI
-                header[0] += 28;
-                int sum = 1;
-                while (sum < naluLength) {
-                    int cont = Math.min(naluLength - sum, maxPacketSize - RtpConstants.RTP_HEADER_LENGTH - 2);
-                    int length = Math.min(cont, bufferInfo.size - byteBuffer.position());
-                    byte[] buffer = getBuffer(length + RtpConstants.RTP_HEADER_LENGTH + 2);
-
-                    buffer[RtpConstants.RTP_HEADER_LENGTH] = header[0];
-                    buffer[RtpConstants.RTP_HEADER_LENGTH + 1] = header[1];
-                    updateTimeStamp(buffer, ts);
-                    byteBuffer.get(buffer, RtpConstants.RTP_HEADER_LENGTH + 2, length);
-                    sum += length;
-                    // Last packet before next NAL
-                    if (sum >= naluLength) {
-                        // End bit on
-                        buffer[RtpConstants.RTP_HEADER_LENGTH + 1] += 0x40;
-                        markPacket(buffer); //mark end frame
-                    }
-                    updateSeq(buffer);
-                    RtpFrame rtpFrame = new RtpFrame(buffer, ts, length + RtpConstants.RTP_HEADER_LENGTH + 2, rtpPort, rtcpPort, channelIdentifier);
-                    rtpFrame.setSequence(getSeq());
-                    videoPacketCallback.onVideoFrameCreated(rtpFrame);
-                    // Switch start bit
-                    header[1] = (byte) (header[1] & 0x7F);
-                }
             }
-        }
+        });
+        byteBuffer.clear();
+
     }
 
     public static String bytesToHexString(byte[] src) {
-        StringBuilder stringBuilder = new StringBuilder("");
+        StringBuilder stringBuilder = new StringBuilder();
         if (src == null || src.length <= 0) {
             return null;
         }
@@ -127,7 +80,7 @@ public class H264Packet extends BasePacket {
     private void setSpsPps(byte[] sps, byte[] pps) {
         String spsHex = bytesToHexString(sps);
         String ppsHex = bytesToHexString(pps);
-
+        h264HandlerNative.updateSPS_PPS(sps, sps.length, pps, pps.length);
         Log.d(TAG, "setSpsPps() called with: sps = [" + spsHex);
         Log.d(TAG, "setSpsPps() called with:  pps = [" + ppsHex + "]");
 
@@ -152,6 +105,6 @@ public class H264Packet extends BasePacket {
     @Override
     public void reset() {
         super.reset();
-        sendKeyFrame = false;
     }
 }
+

@@ -16,6 +16,7 @@ public class AacPacket extends BasePacket {
 
   public AacPacket(int sampleRate, AudioPacketCallback audioPacketCallback) {
     super(sampleRate);
+
     this.audioPacketCallback = audioPacketCallback;
     channelIdentifier = (byte) 0;
   }

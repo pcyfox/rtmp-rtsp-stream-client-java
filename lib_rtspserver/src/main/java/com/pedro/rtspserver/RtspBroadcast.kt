@@ -19,8 +19,6 @@ class RtspBroadcast : VideoPacketCallback {
     private val broadcastIp = "239.0.0.200"
     private val targetPort = 2021
     private var videoPacket: H264Packet? = null
-    private var lastSeq = 0L
-    private val ipGroup = arrayListOf(12, 11)
 
     override fun onVideoFrameCreated(rtpFrame: RtpFrame) {
 //        if (rtpFrame.sequence != 0L && rtpFrame.sequence - lastSeq != 1L) {

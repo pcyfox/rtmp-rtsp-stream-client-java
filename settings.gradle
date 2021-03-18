@@ -1,2 +1,3 @@
+include ':lib_h264'
 include ':lib_rtspserver'
 include ':app', ':rtmp', ':encoder', ':rtsp', ':rtplibrary'
